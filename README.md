@@ -1,3 +1,5 @@
+<img width="1154" height="664" alt="access-control-system-app-story" src="https://github.com/user-attachments/assets/e0a8c40d-4615-400a-9ab5-2c4b4e124be8" />
+
 # RFID ile Bina Erişimi:
 
 ## RFID Nedir ve Ne İşe Yarar?
