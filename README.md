@@ -833,3 +833,746 @@ Bu dönüşüm fiziksel güvenliği klasik bina otomasyonundan çıkararak doğr
 Dolayısıyla modern bir PACS değerlendirmesi yalnızca kart okuyucularını değil, tüm kimlik yönetimi ve ağ ekosistemini kapsayan bütüncül bir güvenlik analizini gerektirir.
 
 ---
+
+# RFID Haberleşmesi ve Kimlik Doğrulama Mekanizmaları
+
+Bir erişim kartını okuyucuya yaklaştırdığımızda gerçekleşen işlem çoğu kullanıcı için yalnızca birkaç yüz milisaniye sürer. Ancak bu kısa süre içerisinde fiziksel katmandan uygulama katmanına kadar uzanan birden fazla haberleşme adımı gerçekleşir.
+
+Modern RFID sistemlerinde güvenlik yalnızca kartın sahip olduğu kimlik bilgilerine dayanmaz. Asıl güvenlik, kart ile okuyucu arasında kurulan oturumun nasıl başlatıldığı, kimlik doğrulamanın nasıl gerçekleştirildiği ve iletilen verinin nasıl korunduğu ile doğrudan ilişkilidir.
+
+Bu nedenle aynı kart teknolojisini kullanan iki farklı kurum, tamamen farklı güvenlik seviyelerine sahip olabilir.
+
+---
+
+# Haberleşme Sürecine Genel Bakış
+
+Bir RFID kartı okuyucuya yaklaştırıldığında süreç aşağıdaki sırayla ilerler.
+
+```text
+RF Alanı Oluşturulur
+        │
+        ▼
+Kart Enerji Kazanır
+        │
+        ▼
+Kart Algılanır
+        │
+        ▼
+Kart Seçimi (Anti-Collision)
+        │
+        ▼
+Kimlik Doğrulama
+        │
+        ▼
+Veri Alışverişi
+        │
+        ▼
+Erişim Kararı
+```
+
+Bu zincirdeki her adım farklı standartlar ve protokoller tarafından tanımlanmaktadır.
+
+---
+
+# Elektromanyetik İndüksiyon
+
+Pasif RFID kartlarının içerisinde pil bulunmaz.
+
+Kartın çalışabilmesi için gerekli enerji okuyucu tarafından oluşturulan elektromanyetik alan sayesinde elde edilir.
+
+Okuyucu sürekli olarak belirli frekansta RF alanı üretir.
+
+Kart bu alan içerisine girdiğinde anten bobini üzerinde indüklenen enerji sayesinde entegre devre çalışmaya başlar.
+
+Bu mekanizma sayesinde kart;
+
+- işlemcisini çalıştırabilir,
+- belleğini kullanabilir,
+- okuyucuya cevap verebilir.
+
+Dolayısıyla kart kendi başına yayın yapan aktif bir cihaz değildir.
+
+---
+
+# Kartın Algılanması
+
+Enerji elde edildikten sonra okuyucu çevresinde bulunan kartların varlığını tespit etmeye çalışır.
+
+Aynı anda birden fazla kart okuyucu alanına girmiş olabilir.
+
+Örneğin;
+
+- cüzdanda iki kart bulunabilir,
+- personel kartı ile ulaşım kartı birlikte taşınabilir,
+- ziyaretçi kartı aynı anda okuyucuya yaklaşabilir.
+
+Bu durumda sistemin hangi kartla iletişim kuracağını belirlemesi gerekir.
+
+---
+
+# Anti-Collision Mekanizması
+
+Birden fazla kart aynı anda cevap verdiğinde sinyaller üst üste bineceğinden iletişim mümkün olmaz.
+
+Bu problemi çözmek amacıyla ISO/IEC 14443 standardı Anti-Collision algoritmalarını tanımlar.
+
+Bu mekanizma sayesinde okuyucu;
+
+- kartları tek tek tanımlar,
+- benzersiz kimliklerini ayırır,
+- yalnızca seçilen kartla haberleşmeye devam eder.
+
+Bu süreç tamamen otomatik gerçekleşir ve kullanıcı tarafından fark edilmez.
+
+---
+
+# UID (Unique Identifier)
+
+Her RFID kartı üretim aşamasında benzersiz bir tanımlayıcıyla ilişkilendirilir.
+
+Bu tanımlayıcı UID olarak adlandırılır.
+
+UID;
+
+- 4 Byte,
+- 7 Byte,
+- 10 Byte
+
+uzunluğunda olabilir.
+
+UID'nin temel amacı kartın benzersiz olarak tanımlanmasını sağlamaktır.
+
+Ancak önemli bir nokta vardır.
+
+UID bir kimlik doğrulama mekanizması değildir.
+
+UID yalnızca kartın seri numarasıdır.
+
+Gerçek güvenlik kartın gerçekten yetkili olduğunu kanıtlayabilmesine dayanır.
+
+---
+
+# ATS (Answer To Select)
+
+Kart seçildikten sonra okuyucu karttan teknik özelliklerini öğrenmek ister.
+
+Bu amaçla ATS adı verilen bilgi paketi alınır.
+
+ATS içerisinde;
+
+- desteklenen protokol sürümü,
+- zamanlama bilgileri,
+- veri aktarım parametreleri,
+- iletişim özellikleri
+
+yer alabilir.
+
+Bu bilgiler sayesinde okuyucu kart ile nasıl haberleşeceğini belirler.
+
+---
+
+# APDU Yapısı
+
+ISO/IEC 14443 Part 4 standardı sonrasında kart ile okuyucu arasında APDU adı verilen veri paketleri kullanılabilir.
+
+APDU (Application Protocol Data Unit)
+
+akıllı kart dünyasında kullanılan standart haberleşme biçimidir.
+
+Temel olarak iki paket türü bulunur.
+
+**Command APDU**
+
+Okuyucudan karta gönderilen komutları içerir.
+
+Örneğin;
+
+- uygulama seçme
+- veri okuma
+- veri yazma
+- kimlik doğrulama isteği
+
+gibi işlemler bu paketlerle gerçekleştirilir.
+
+**Response APDU**
+
+Kart tarafından oluşturulan cevaptır.
+
+Bu cevap;
+
+- veri,
+- durum kodu,
+- hata bilgisi
+
+içerebilir.
+
+---
+
+# Mutual Authentication
+
+Modern RFID sistemlerinde güvenlik yalnızca okuyucunun kartı doğrulamasına dayanmaz.
+
+Kart da karşısındaki cihazın yetkili okuyucu olduğunu doğrular.
+
+Bu yaklaşım Mutual Authentication yani karşılıklı kimlik doğrulama olarak adlandırılır.
+
+Bu mekanizma sayesinde;
+
+- sahte okuyucular,
+- yetkisiz cihazlar,
+- doğrulanmamış terminaller
+
+ile iletişim kurulması engellenebilir.
+
+Karşılıklı doğrulama günümüzde modern erişim kartlarının temel güvenlik özelliklerinden biridir.
+
+---
+
+# Nonce Kullanımı
+
+Kriptografik haberleşmede en önemli kavramlardan biri de Nonce değeridir.
+
+Nonce;
+
+yalnızca bir kez kullanılan rastgele üretilmiş sayıdır.
+
+Her oturum için yeni bir değer oluşturulur.
+
+Bu sayede daha önce gerçekleşmiş bir haberleşmenin yeniden kullanılmasının önüne geçilir.
+
+Nonce kullanımı modern kimlik doğrulama protokollerinin vazgeçilmez bileşenlerinden biridir.
+
+---
+
+# Oturum Anahtarı (Session Key)
+
+Başarılı kimlik doğrulamasının ardından taraflar kalıcı anahtarları doğrudan kullanmaya devam etmez.
+
+Bunun yerine yalnızca ilgili oturum boyunca geçerli olacak yeni bir Session Key oluşturulur.
+
+Bu yaklaşımın avantajları şunlardır.
+
+- Her oturum bağımsız korunur.
+- Eski oturumların etkilenme riski azalır.
+- Haberleşme güvenliği artırılır.
+
+Modern erişim kartlarının büyük bölümü bu yöntemi kullanmaktadır.
+
+---
+
+# Secure Messaging
+
+Kimlik doğrulama tamamlandıktan sonra veri alışverişi başlar.
+
+Modern sistemlerde bu veri;
+
+- gizlilik (Confidentiality),
+- bütünlük (Integrity),
+- kimlik doğrulama (Authentication)
+
+ilkeleri doğrultusunda korunur.
+
+Secure Messaging mekanizması sayesinde iletilen komutlar ve cevaplar güvenli oturum içerisinde aktarılır.
+
+Bu yaklaşım yalnızca verinin okunmasını değil, değiştirilmesini de önlemeyi amaçlar.
+
+---
+
+# AES Tabanlı Güvenlik
+
+Yeni nesil erişim kartlarının büyük bölümü AES algoritmasını temel alan güvenlik mekanizmalarını desteklemektedir.
+
+AES;
+
+- yüksek performans,
+- yaygın donanım desteği,
+- uluslararası standartlara uygunluk
+
+gibi nedenlerle fiziksel erişim sistemlerinde yaygın olarak kullanılmaktadır.
+
+Kurumsal yapılarda özellikle AES-128 desteği bulunan kart teknolojileri tercih edilmektedir.
+
+---
+
+# Kart ve Okuyucu Arasındaki Haberleşme Tek Başına Yeterli Değildir
+
+Kart ile okuyucu arasındaki haberleşme güvenli olsa bile fiziksel erişim zinciri burada sona ermez.
+
+Kimlik doğrulaması tamamlandıktan sonra bilgiler;
+
+- erişim kontrol paneline,
+- merkezi yönetim sunucusuna,
+- kimlik yönetim sistemlerine,
+- olay kayıt altyapısına
+
+aktarılır.
+
+Dolayısıyla güvenlik yalnızca RF haberleşmesiyle sınırlı değildir.
+
+Gerçek güvenlik seviyesi, uçtan uca tüm erişim zincirinin birlikte değerlendirilmesiyle ortaya çıkar.
+
+---
+
+# Modern Fiziksel Erişim Güvenlik Mimarileri
+
+Fiziksel erişim kontrol sistemleri son yıllarda önemli bir dönüşüm geçirmiştir. Geçmişte kapalı devre çalışan, yalnızca kart okuyucuları ve kontrol panellerinden oluşan yapılar; bugün kurumsal kimlik yönetimi, güvenlik operasyon merkezleri, bulut servisleri ve merkezi izleme platformlarıyla bütünleşik şekilde çalışmaktadır.
+
+Bu dönüşümün temel amacı yalnızca kullanıcı deneyimini geliştirmek değildir. Asıl hedef; fiziksel erişim süreçlerini, kurumun genel siber güvenlik mimarisinin bir parçası hâline getirerek görünürlük, denetlenebilirlik ve güvenlik seviyesini artırmaktır.
+
+Modern PACS çözümleri artık yalnızca "kapıyı açan sistemler" değildir. Kimlik doğrulama, yetkilendirme, olay yönetimi ve risk analizi süreçlerinin aktif bir bileşeni olarak görev yapmaktadır.
+
+---
+
+# OSDP Secure Channel
+
+Fiziksel erişim sistemlerinde en kritik haberleşme bağlantılarından biri RFID okuyucu ile erişim kontrol paneli arasındaki iletişimdir.
+
+Uzun yıllar boyunca bu iletişim için farklı üreticilere ait kapalı protokoller veya günümüzde artık eski kabul edilen Wiegand arayüzü kullanılmıştır. Bu yaklaşımlar, uzun süre sektör standardı olarak değerlendirilmiş olsa da modern güvenlik beklentilerini karşılamakta yetersiz kalmaktadır.
+
+Bu nedenle Security Industry Association (SIA) tarafından geliştirilen **Open Supervised Device Protocol (OSDP)** günümüzde yeni kurulumlarda yaygın olarak tercih edilmektedir.
+
+OSDP yalnızca veri aktarımını standartlaştırmakla kalmaz; cihaz yönetimi ve denetlenebilirlik açısından da önemli avantajlar sunar.
+
+Secure Channel özelliği etkinleştirildiğinde okuyucu ile kontrol paneli arasında karşılıklı kimlik doğrulama gerçekleştirilir ve iletişim şifrelenmiş bir oturum üzerinden yürütülür.
+
+Bu yaklaşımın başlıca avantajları şunlardır:
+
+- AES tabanlı güvenli haberleşme
+- Karşılıklı cihaz doğrulaması
+- Veri bütünlüğünün korunması
+- Yetkisiz cihazların tespit edilmesi
+- Merkezi cihaz yönetimi
+- Denetlenebilir haberleşme altyapısı
+
+Bu nedenle günümüzde yeni fiziksel erişim projelerinde OSDP Secure Channel kullanımı önemli bir güvenlik gereksinimi olarak kabul edilmektedir.
+
+---
+
+# Identity and Access Management (IAM)
+
+Kurumsal yapılarda fiziksel erişim yetkilerinin manuel olarak yönetilmesi hem operasyonel açıdan maliyetlidir hem de güvenlik riskleri oluşturabilir.
+
+Bu nedenle birçok kuruluş fiziksel erişim sistemlerini Identity and Access Management (IAM) çözümleriyle entegre etmektedir.
+
+IAM sistemleri kullanıcıların yaşam döngüsünü merkezi olarak yönetir.
+
+Buna;
+
+- işe başlama,
+- görev değişikliği,
+- departman değişikliği,
+- geçici görevlendirme,
+- işten ayrılma
+
+gibi süreçler dahildir.
+
+Bu yaklaşım sayesinde fiziksel erişim hakları kullanıcı hesabından bağımsız yönetilmez.
+
+Örneğin yeni işe başlayan bir çalışanın hem Active Directory hesabı hem de fiziksel erişim kartı aynı iş akışı içerisinde otomatik olarak oluşturulabilir.
+
+Benzer şekilde işten ayrılan bir kullanıcının dijital hesapları kapatıldığında fiziksel erişim yetkileri de eş zamanlı olarak kaldırılabilir.
+
+Bu süreç, insan kaynakları sistemleri ile IAM platformlarının entegrasyonu sayesinde tamamen otomatik hâle getirilebilir.
+
+---
+
+# Active Directory ve Microsoft Entra ID Entegrasyonu
+
+Microsoft ekosistemini kullanan kurumlarda fiziksel erişim kontrol sistemleri çoğunlukla Active Directory veya Microsoft Entra ID ile birlikte çalışmaktadır.
+
+Bu entegrasyon sayesinde kullanıcı grupları fiziksel erişim politikalarına doğrudan yansıtılabilir.
+
+Örneğin;
+
+- Sistem Yöneticileri
+- Ağ Ekibi
+- İnsan Kaynakları
+- Muhasebe
+- Veri Merkezi Personeli
+
+gibi gruplar farklı fiziksel erişim yetkilerine sahip olabilir.
+
+Bu yapı, rol tabanlı erişim kontrolü (Role-Based Access Control – RBAC) yaklaşımını fiziksel güvenlik alanına taşımaktadır.
+
+Son yıllarda bulut kimlik servislerinin yaygınlaşmasıyla birlikte hibrit mimariler de giderek daha fazla kullanılmaktadır.
+
+Bu mimarilerde kullanıcı kimlikleri hem şirket içi dizin servislerinde hem de bulut tabanlı kimlik sağlayıcılarında yönetilebilmektedir.
+
+---
+
+# SIEM ile Fiziksel Güvenlik Olaylarının Korelasyonu
+
+Modern güvenlik operasyon merkezlerinde fiziksel erişim kayıtları da en az ağ logları kadar önemli veri kaynakları arasında yer almaktadır.
+
+Bir PACS çözümü tarafından üretilen olay kayıtları SIEM platformlarına aktarılabilir ve diğer güvenlik olaylarıyla ilişkilendirilebilir.
+
+Bu yaklaşım güvenlik analistlerine daha geniş bir görünürlük sağlar.
+
+Örneğin aşağıdaki olaylar tek başına değerlendirildiğinde olağan görünebilir:
+
+- Kullanıcının sabah binaya giriş yapması
+- VPN bağlantısı kurması
+- Ayrıcalıklı bir sisteme erişmesi
+
+Ancak tüm bu olaylar zaman ekseninde birlikte değerlendirildiğinde kullanıcının normal davranış modeliyle karşılaştırılabilir.
+
+Bu sayede güvenlik operasyon merkezleri fiziksel ve dijital olayları tek bir zaman çizelgesi üzerinde inceleyebilir.
+
+Fiziksel erişim kayıtlarının SIEM platformlarıyla bütünleştirilmesi özellikle büyük ölçekli organizasyonlarda olay müdahale süreçlerini önemli ölçüde hızlandırmaktadır.
+
+---
+
+# Video Management System (VMS) Entegrasyonu
+
+Modern güvenlik mimarilerinde erişim olayları yalnızca metin tabanlı loglardan oluşmaz.
+
+Birçok kurum Video Management System (VMS) çözümlerini PACS altyapısıyla entegre etmektedir.
+
+Bu sayede belirli bir erişim olayı gerçekleştiğinde ilgili kamera görüntüsü otomatik olarak olay kaydıyla eşleştirilebilir.
+
+Bu yaklaşım;
+
+- olay incelemelerini hızlandırır,
+- adli analiz süreçlerini destekler,
+- güvenlik ekiplerinin durumsal farkındalığını artırır.
+
+Fiziksel güvenlik ile video analitiğinin birlikte kullanılması özellikle kritik altyapılarda yaygın olarak tercih edilmektedir.
+
+---
+
+# Zero Trust Physical Access
+
+Zero Trust yaklaşımı uzun yıllar boyunca yalnızca ağ güvenliğiyle ilişkilendirilmiştir.
+
+Ancak günümüzde aynı prensip fiziksel erişim sistemlerine de uygulanmaktadır.
+
+Temel yaklaşım oldukça basittir:
+
+> Hiçbir kullanıcı veya cihaz yalnızca binanın içinde bulunduğu için güvenilir kabul edilmez.
+
+Modern fiziksel erişim sistemleri erişim kararlarını yalnızca kart bilgisine göre vermez.
+
+Karar sürecinde aşağıdaki bilgiler birlikte değerlendirilebilir:
+
+- kullanıcının rolü,
+- erişilmek istenen alan,
+- günün saati,
+- cihaz durumu,
+- kimlik doğrulama geçmişi,
+- kurumsal güvenlik politikaları.
+
+Bu yaklaşım fiziksel güvenliği statik kurallardan çıkararak bağlama duyarlı hâle getirir.
+
+---
+
+# En Az Ayrıcalık İlkesi
+
+Fiziksel erişim kontrol sistemlerinde de "Least Privilege" yaklaşımı uygulanmalıdır.
+
+Her kullanıcı yalnızca görevini yerine getirebilmesi için gerekli alanlara erişebilmelidir.
+
+Örneğin;
+
+- muhasebe personelinin veri merkezine,
+- ziyaretçilerin operasyon ofislerine,
+- dış yüklenicilerin yönetim katına
+
+erişebilmesi normal şartlarda beklenmez.
+
+Rol tabanlı erişim kontrolü ve düzenli yetki gözden geçirmeleri bu yaklaşımın temelini oluşturur.
+
+---
+
+# Düzenli Güvenlik Değerlendirmeleri
+
+Fiziksel erişim sistemleri uzun ömürlü altyapılar olduğu için yıllarca değişmeden kullanılabilmektedir.
+
+Ancak tehdit ortamı sürekli değişmektedir.
+
+Bu nedenle fiziksel erişim altyapılarının belirli aralıklarla gözden geçirilmesi önemlidir.
+
+Kurumların değerlendirmesi gereken başlıca konular şunlardır:
+
+- Kart teknolojilerinin güncelliği
+- Haberleşme protokollerinin güvenliği
+- Kimlik yaşam döngüsü süreçleri
+- Olay kayıtlarının izlenmesi
+- Ağ segmentasyonu
+- Donanım ve yazılım güncellemeleri
+- Yedekleme ve felaket kurtarma planları
+
+Düzenli değerlendirmeler yalnızca mevcut riskleri ortaya çıkarmakla kalmaz; gelecekte oluşabilecek güvenlik açıklarının da erken aşamada tespit edilmesine katkı sağlar.
+
+---
+
+# Bulut Tabanlı Fiziksel Erişim Sistemleri (PACSaaS)
+
+Kurumsal BT altyapılarında son yılların en belirgin dönüşümlerinden biri, şirket içi (on-premises) sistemlerden bulut tabanlı servislere geçiştir. Aynı dönüşüm fiziksel erişim kontrol sistemlerinde de yaşanmaktadır.
+
+Physical Access Control as a Service (PACSaaS), erişim kontrol altyapısının tamamının veya belirli bileşenlerinin bulut üzerinden yönetilmesini ifade eder.
+
+Bu modelde erişim politikaları, kullanıcı kayıtları, cihaz konfigürasyonları ve olay kayıtları merkezi bir bulut platformu üzerinden yönetilebilir.
+
+Geleneksel mimaride fiziksel erişim sunucuları kurum veri merkezinde bulunurken, PACSaaS yaklaşımında yönetim katmanı hizmet sağlayıcının güvenli altyapısında çalışır.
+
+Bu yaklaşım özellikle;
+
+- çok lokasyonlu şirketlerde,
+- zincir mağazalarda,
+- üniversitelerde,
+- hastanelerde,
+- kampüs yapılarında
+
+operasyonel kolaylık sağlamaktadır.
+
+---
+
+# PACSaaS'ın Sağladığı Avantajlar
+
+Bulut tabanlı mimariler yalnızca yönetim kolaylığı sunmaz.
+
+Aynı zamanda;
+
+- merkezi politika yönetimi,
+- otomatik yazılım güncellemeleri,
+- yüksek erişilebilirlik,
+- ölçeklenebilirlik,
+- uzaktan cihaz yönetimi,
+- merkezi log toplama,
+- felaket kurtarma kolaylığı
+
+gibi avantajlar sağlar.
+
+Yeni bir ofisin sisteme eklenmesi çoğu zaman yalnızca yeni cihazların tanımlanmasıyla gerçekleştirilebilir.
+
+Yerel sunucu kurulumu gereksinimi önemli ölçüde azalır.
+
+---
+
+# Bulut Geçişinin Getirdiği Yeni Güvenlik Gereksinimleri
+
+Bulut tabanlı erişim kontrolü yeni avantajlar sağlarken farklı güvenlik gereksinimlerini de beraberinde getirir.
+
+Özellikle aşağıdaki alanlar kritik önem taşır.
+
+- API güvenliği
+- Kimlik federasyonu
+- Çok faktörlü kimlik doğrulama
+- Sertifika yönetimi
+- Anahtar yönetimi
+- Yetkilendirme politikaları
+- Bulut günlüklerinin izlenmesi
+
+Modern PACS çözümlerinin büyük bölümü REST tabanlı API'ler üzerinden diğer kurumsal sistemlerle haberleşmektedir.
+
+Bu nedenle fiziksel erişim sistemleri artık klasik bir bina otomasyonu değil, kurumsal BT altyapısının aktif bir parçasıdır.
+
+---
+
+# Mobil Kimlik Teknolojileri
+
+Fiziksel kartlar uzun yıllardır erişim kontrolünün temel bileşeni olsa da günümüzde mobil kimlik çözümleri hızla yaygınlaşmaktadır.
+
+Akıllı telefonlar artık yalnızca iletişim cihazı değildir.
+
+Birçok kurum telefonları fiziksel erişim kimliği olarak kullanmaktadır.
+
+Mobil kimlik çözümlerinde kullanıcı bilgileri güvenli donanım bileşenlerinde saklanabilir ve biyometrik doğrulama mekanizmalarıyla korunabilir.
+
+Bu sayede kullanıcı deneyimi iyileşirken kart kaybı gibi operasyonel sorunlar da azalır.
+
+Mobil kimlikler aşağıdaki platformlarda kullanılabilmektedir.
+
+- Apple Wallet
+- Google Wallet
+- HID Mobile Access
+- HID SEOS
+- STid Mobile ID
+- Suprema Mobile Access
+
+---
+
+# Dijital Cüzdanlar ve Güvenli Donanım
+
+Modern mobil cihazlarda kimlik bilgileri genellikle işletim sisteminin güvenli donanım alanlarında saklanmaktadır.
+
+Örneğin;
+
+- Apple Secure Enclave
+- Android StrongBox
+- Trusted Execution Environment (TEE)
+
+gibi teknolojiler hassas kriptografik anahtarların korunmasını sağlar.
+
+Bu yaklaşım sayesinde kimlik bilgilerinin uygulama seviyesinde korunmasının ötesinde donanım destekli güvenlik elde edilir.
+
+---
+
+# Biyometrik Doğrulama
+
+Mobil erişim çözümleri çoğu zaman biyometrik doğrulamayla birlikte kullanılmaktadır.
+
+Yaygın yöntemler arasında;
+
+- parmak izi,
+- yüz tanıma,
+- iris doğrulama
+
+yer almaktadır.
+
+Burada önemli olan nokta biyometrik verinin doğrudan erişim sistemine gönderilmemesidir.
+
+Çoğu modern mimaride biyometrik doğrulama cihaz üzerinde gerçekleştirilir ve erişim sistemi yalnızca doğrulamanın başarılı olduğuna ilişkin sonucu alır.
+
+Bu yaklaşım hem güvenlik hem de kişisel verilerin korunması açısından önemli avantajlar sağlar.
+
+---
+
+# Yapay Zekâ Destekli Davranış Analitiği
+
+Kurumsal organizasyonlarda fiziksel erişim sistemleri her gün milyonlarca olay kaydı üretebilir.
+
+Bu büyüklükteki verinin manuel olarak incelenmesi mümkün değildir.
+
+Bu nedenle birçok güvenlik operasyon merkezi davranış analitiği (User and Entity Behavior Analytics – UEBA) çözümlerinden yararlanmaktadır.
+
+UEBA sistemleri kullanıcıların normal davranışlarını zaman içerisinde öğrenerek olağan dışı hareketleri belirleyebilir.
+
+Örneğin;
+
+- normal çalışma saatleri dışında erişim talepleri,
+- alışılmadık lokasyonlardan girişler,
+- beklenmeyen güvenlik bölgelerine yönelim,
+- olağan dışı erişim yoğunluğu
+
+gibi davranışlar risk puanını artırabilir.
+
+Bu yaklaşım klasik kural tabanlı alarm mekanizmalarına göre daha bağlamsal bir değerlendirme sunar.
+
+---
+
+# Fiziksel ve Dijital Kimliklerin Birleşmesi
+
+Kimlik yönetiminde dikkat çeken eğilimlerden biri fiziksel ve dijital kimliklerin ortak bir platformda yönetilmesidir.
+
+Gelecekte kullanıcıların;
+
+- bina girişleri,
+- VPN erişimleri,
+- bulut servisleri,
+- ayrıcalıklı hesapları,
+- fiziksel erişim izinleri
+
+aynı kimlik yaşam döngüsü içerisinde yönetilecektir.
+
+Bu yaklaşım güvenlik ekiplerine tek noktadan görünürlük sağlarken kullanıcı deneyimini de önemli ölçüde iyileştirir.
+
+---
+
+# FIDO ve Parolasız Kimlik Doğrulama
+
+Son yıllarda FIDO Alliance tarafından geliştirilen standartlar dijital kimlik doğrulama alanında önemli değişikliklere yol açmıştır.
+
+Passkey tabanlı kimlik doğrulama mekanizmaları kullanıcıların parola kullanımını azaltmayı hedeflemektedir.
+
+Her ne kadar FIDO standartları doğrudan fiziksel erişim sistemleri için geliştirilmemiş olsa da dijital kimlik yönetimindeki bu dönüşüm fiziksel güvenlik çözümlerini de etkilemektedir.
+
+Gelecekte fiziksel ve dijital kimliklerin aynı güven modeli içerisinde değerlendirilmesi beklenmektedir.
+
+---
+
+# Sürdürülebilir Güvenlik Yaklaşımı
+
+Fiziksel erişim güvenliği belirli bir ürün satın alarak tamamlanabilecek bir süreç değildir.
+
+Kuruluşların düzenli olarak;
+
+- güvenlik değerlendirmeleri yapması,
+- politika güncellemeleri gerçekleştirmesi,
+- erişim haklarını gözden geçirmesi,
+- cihaz envanterini doğrulaması,
+- yazılım güncellemelerini takip etmesi,
+- kullanıcı farkındalığını artırması
+
+gerekmektedir.
+
+Teknoloji sürekli değişmektedir.
+
+Dolayısıyla fiziksel güvenlik mimarileri de değişen tehdit ortamına uyum sağlayacak şekilde sürekli geliştirilmelidir.
+
+---
+# Sonuç
+
+RFID tabanlı fiziksel erişim kontrol sistemleri uzun yıllar boyunca yalnızca kapıları açan elektronik çözümler olarak değerlendirildi. Ancak günümüzde bu sistemler, kurumsal siber güvenlik mimarisinin ayrılmaz bir parçası hâline gelmiş durumda.
+
+Bir kullanıcının kartını okuyucuya yaklaştırmasıyla başlayan süreç, yalnızca bir kimlik doğrulama işleminden ibaret değildir. Aynı anda kart ile okuyucu arasında haberleşme gerçekleşir, erişim kontrol paneli kimliği değerlendirir, merkezi erişim sunucusu yetkilendirme kararını üretir, olay kayıtları oluşturulur ve bu kayıtlar çoğu zaman SIEM platformlarına aktarılır. Büyük ölçekli yapılarda bu süreç; Active Directory, LDAP, IAM, video yönetim sistemleri ve güvenlik operasyon merkezleriyle bütünleşik şekilde çalışır.
+
+Bu nedenle fiziksel erişim güvenliği yalnızca kullanılan kart teknolojisi üzerinden değerlendirilemez. Bir kurumun gelişmiş kartlar kullanması, güvenli bir fiziksel erişim mimarisine sahip olduğu anlamına gelmez. Kart teknolojisi kadar haberleşme protokolleri, anahtar yönetimi, kimlik yaşam döngüsü, ağ segmentasyonu, merkezi izleme ve operasyonel süreçler de güvenlik seviyesini doğrudan etkiler.
+
+Modern güvenlik anlayışı, fiziksel ve dijital dünyayı birbirinden bağımsız iki alan olarak ele almamaktadır. Günümüzde fiziksel erişim kayıtları, dijital kimlik doğrulama olaylarıyla birlikte analiz edilmekte; kullanıcı davranışları bağlamsal olarak değerlendirilmekte ve risk temelli erişim kararları uygulanmaktadır. Zero Trust yaklaşımı, yalnızca ağ erişimleri için değil fiziksel erişim sistemleri için de giderek daha fazla benimsenmektedir.
+
+Önümüzdeki yıllarda mobil kimlik teknolojilerinin, bulut tabanlı PACS çözümlerinin, davranış analitiğinin ve yapay zekâ destekli güvenlik platformlarının daha yaygın hâle gelmesi beklenmektedir. Bununla birlikte teknolojinin gelişmesi tek başına yeterli değildir. Güvenli bir fiziksel erişim altyapısı; doğru teknoloji seçimi, güvenli yapılandırma, düzenli güvenlik değerlendirmeleri ve etkin operasyonel süreçlerin birlikte uygulanmasını gerektirir.
+
+Bir penetrasyon test uzmanının bakış açısından değerlendirildiğinde, kapıdaki RFID okuyucu yalnızca duvara monte edilmiş bir cihaz değildir. O okuyucu; kablosuz haberleşme, gömülü sistemler, kriptografi, kimlik yönetimi, ağ güvenliği ve güvenlik operasyonlarının kesiştiği karmaşık bir güven zincirinin ilk halkasını temsil eder. Zincirin herhangi bir halkasında ortaya çıkabilecek bir zayıflık, kurumun fiziksel ve dijital güvenliğini birlikte etkileyebilir.
+
+Sonuç olarak RFID güvenliği, "kart güvenliği" kavramının çok ötesindedir. Gerçek güvenlik; karttan okuyucuya, erişim panelinden merkezi sunucuya, kimlik yönetiminden olay izleme platformlarına kadar tüm fiziksel erişim ekosisteminin uçtan uca güvenli şekilde tasarlanması ve sürekli olarak gözden geçirilmesiyle sağlanabilir.
+
+---
+
+# Kaynakça
+
+## Standartlar ve Resmî Dokümanlar
+
+- National Institute of Standards and Technology. (2023). **NIST Special Publication 800-116 Revision 1 – Guidelines for the Use of PIV Credentials in Facility Access.**
+
+- National Institute of Standards and Technology. (2023). **NIST Special Publication 800-63 – Digital Identity Guidelines.**
+
+- ISO/IEC. **ISO/IEC 14443 – Identification Cards — Contactless Integrated Circuit Cards — Proximity Cards.**
+
+- ISO/IEC. **ISO/IEC 15693 – Identification Cards — Contactless Integrated Circuit Cards — Vicinity Cards.**
+
+- Security Industry Association (SIA). **Open Supervised Device Protocol (OSDP) Specification.**
+
+---
+
+## Akademik Çalışmalar
+
+- Garcia, F. D., Koning Gans, G., Muijrers, R., van Rossum, P., Verdult, R., Schreur, R., & Jacobs, B. (2008). **Dismantling MIFARE Classic.** *European Symposium on Research in Computer Security (ESORICS).*
+
+- Nohl, K., Evans, D., Starbug, H., & Plotz, H. (2008). **Reverse Engineering a Cryptographic RFID Tag.**
+
+---
+
+## Üretici Dokümanları
+
+- NXP Semiconductors. **MIFARE DESFire EV3 Product Short Data Sheet.**
+
+- NXP Semiconductors. **AN12757 – MIFARE DESFire EV3 Features and Security Overview.**
+
+- HID Global. **Security Best Practices for Physical Access Control Systems.**
+
+- HID Global. **HID Mobile Access White Paper.**
+
+---
+
+## Güvenlik Rehberleri
+
+- European Union Agency for Cybersecurity (ENISA). **Good Practices for Security of Internet of Things and Smart Infrastructure.**
+
+- OWASP Foundation. **Internet of Things Security Guidance.**
+
+- MITRE Corporation. **MITRE ATT&CK Framework – Enterprise Matrix.**
+
+- MITRE Corporation. **MITRE ATT&CK for ICS.**
+
+- FIDO Alliance. **FIDO2: Moving the World Beyond Passwords.**
+
+---
+
+## Ek Okuma Önerileri
+
+- Ross Anderson. **Security Engineering (3rd Edition).**
+
+- Charles Pfleeger, Shari Lawrence Pfleeger & Jonathan Margulies. **Security in Computing.**
+
+- Eric Cole. **Advanced Persistent Threat: Understanding the Danger and How to Protect Your Organization.**
