@@ -167,8 +167,166 @@ Amaç; kurumların fiziksel erişim altyapılarının neden kritik olduğunu aç
 
 ---
 
-> **Sonraki Bölüm**
->
-> **RFID Teknolojisinin Temelleri**
->
-> Bir sonraki bölümde RFID'nin fiziksel çalışma prensibi, elektromanyetik indüksiyon, pasif ve aktif etiketler, ISO/IEC 14443 standardı ve kart–okuyucu haberleşmesinin teknik detayları ele alınacaktır.
+# RFID Teknolojisinin Temelleri
+
+RFID (Radio Frequency Identification), nesnelerin radyo frekansları aracılığıyla kablosuz olarak tanımlanmasını sağlayan otomatik kimlik tanımlama teknolojilerinden biridir. Barkod sistemlerinden farklı olarak doğrudan görüş hattına ihtiyaç duymaz. Kart veya etiket ile okuyucu arasında elektromanyetik alan üzerinden gerçekleşen haberleşme sayesinde kimlik doğrulama işlemleri milisaniyeler içerisinde tamamlanabilir.
+
+Günümüzde RFID teknolojisi yalnızca fiziksel erişim kontrol sistemlerinde değil; lojistik, tedarik zinciri yönetimi, sağlık sektörü, perakende, toplu taşıma, üretim tesisleri ve kimlik doğrulama sistemleri gibi çok geniş bir kullanım alanına sahiptir.
+
+Kurumsal yapılarda ise RFID'nin en yaygın kullanım amacı, personel ve ziyaretçi erişimlerinin güvenli ve merkezi olarak yönetilmesidir.
+
+---
+
+# RFID Nasıl Çalışır?
+
+Her RFID sistemi temelde dört ana bileşenden oluşur.
+
+| Bileşen | Görevi |
+|----------|---------|
+| RFID Tag (Credential) | Kimlik bilgisini taşır. |
+| RFID Reader | Kart ile haberleşmeyi başlatır. |
+| Access Controller | Yetkilendirme kararını verir. |
+| Access Control Server | Merkezi politika ve kullanıcı yönetimini gerçekleştirir. |
+
+Bu bileşenler birlikte çalışarak fiziksel erişim kararının verilmesini sağlar.
+
+Aşağıdaki diyagram tipik bir kurumsal mimariyi göstermektedir.
+
+```text
+RFID Card
+     │
+     ▼
+RFID Reader
+     │
+     ▼
+Access Controller
+     │
+     ▼
+Access Control Server
+     │
+ ┌───┴─────────────┐
+ ▼                 ▼
+Identity        SIEM
+Management
+```
+
+Kart okuyucuya yaklaştırıldığında haberleşme yalnızca kart ile okuyucu arasında gerçekleşmez. Kimlik bilgisi erişim paneline, merkezi sunucuya ve çoğu zaman kimlik yönetim sistemlerine kadar iletilir.
+
+---
+
+# Elektromanyetik İndüksiyon
+
+Pasif RFID kartlarının içerisinde pil bulunmaz.
+
+Bunun yerine okuyucunun oluşturduğu elektromanyetik alan kullanılarak gerekli enerji elde edilir.
+
+Bu süreç Faraday'ın elektromanyetik indüksiyon prensibine dayanır.
+
+Okuyucu anteni sürekli belirli bir frekansta elektromanyetik alan üretir.
+
+Kart bu alanın içerisine girdiğinde anten bobini üzerinde indüklenen enerji kartın entegre devresini çalıştırır.
+
+Kart aktif hâle geldikten sonra okuyucuyla veri alışverişi gerçekleştirilir.
+
+Bu sayede herhangi bir dahili güç kaynağı bulunmamasına rağmen pasif RFID kartları uzun yıllar boyunca kullanılabilir.
+
+---
+
+# Pasif ve Aktif RFID Etiketleri
+
+RFID sistemleri kullanılan enerji kaynağına göre üç ana gruba ayrılır.
+
+| Tür | Güç Kaynağı | Okuma Mesafesi | Tipik Kullanım |
+|------|-------------|----------------|----------------|
+| Pasif | Okuyucudan alınır | Kısa | Personel kartları |
+| Aktif | Dahili pil | Uzun | Araç takibi |
+| Yarı Pasif | Pil destekli | Orta | Endüstriyel uygulamalar |
+
+Kurumsal fiziksel erişim kontrol sistemlerinde neredeyse her zaman pasif RFID kartları kullanılmaktadır.
+
+Bunun temel nedeni düşük maliyet, uzun kullanım ömrü ve bakım gerektirmemesidir.
+
+---
+
+# Haberleşme Süreci
+
+Bir RFID kartı okuyucuya yaklaştırıldığında süreç saniyenin çok küçük bir bölümünde tamamlanır.
+
+Temel işlem sırası aşağıdaki gibidir.
+
+1. Okuyucu elektromanyetik alan üretir.
+2. Kart gerekli enerjiyi toplar.
+3. Kart ve okuyucu haberleşmeye başlar.
+4. Kimlik doğrulama gerçekleştirilir.
+5. Yetkilendirme değerlendirilir.
+6. Sonuç erişim kontrol paneline iletilir.
+7. Olay kayıtları merkezi sistemlerde saklanır.
+
+Modern erişim sistemlerinde bu süreç karşılıklı kimlik doğrulama ve güvenli haberleşme mekanizmalarıyla desteklenmektedir.
+
+---
+
+# ISO/IEC 14443 Standardı
+
+Kurumsal erişim kontrol sistemlerinde kullanılan modern kartların önemli bir bölümü ISO/IEC 14443 standardını temel alır.
+
+Bu standart yalnızca fiziksel haberleşmeyi değil, kart ile okuyucu arasındaki veri alışverişinin temel kurallarını da tanımlar.
+
+Standart dört temel bölümden oluşur.
+
+| Bölüm | Açıklama |
+|--------|----------|
+| Physical Layer | Fiziksel haberleşme |
+| Radio Frequency Interface | RF iletişim kuralları |
+| Initialization & Anti-Collision | Kart seçimi |
+| Transmission Protocol | Veri aktarımı |
+
+Bu yapı sayesinde farklı üreticilere ait kartlar aynı standart çerçevesinde çalışabilir.
+
+---
+
+# UID Nedir?
+
+Her RFID kartı üretim sırasında benzersiz bir tanımlayıcı ile ilişkilendirilir.
+
+Bu tanımlayıcıya **UID (Unique Identifier)** adı verilir.
+
+UID, kartın seri numarası olarak düşünülebilir.
+
+Ancak UID tek başına güvenli kimlik doğrulama anlamına gelmez.
+
+Modern erişim sistemleri yalnızca UID bilgisine güvenmek yerine kriptografik doğrulama mekanizmalarından yararlanır.
+
+Bu yaklaşım, kimlik doğrulama sürecinin yalnızca kart numarasına dayanmasını engelleyerek güvenliği artırır.
+
+---
+
+# Anti-Collision Mekanizması
+
+Bir okuyucunun kapsama alanında aynı anda birden fazla RFID kartı bulunabilir.
+
+Bu durumda hangi kartla haberleşileceğinin belirlenmesi gerekir.
+
+ISO/IEC 14443 standardı bu amaçla **Anti-Collision** mekanizmasını tanımlar.
+
+Bu mekanizma sayesinde okuyucu aynı anda birden fazla kart algılasa bile iletişimi kontrollü şekilde yönetebilir.
+
+Böylece veri çakışmaları önlenir ve doğru kart seçilerek haberleşme güvenilir biçimde devam eder.
+
+---
+
+# RFID Haberleşmesinde Güvenlik
+
+Modern RFID sistemlerinde güvenlik yalnızca kart üzerinde depolanan bilgilerle sınırlı değildir.
+
+Kimlik doğrulama süreci boyunca aşağıdaki güvenlik hedefleri sağlanmaya çalışılır.
+
+- Kimliğin doğrulanması
+- Haberleşmenin gizliliği
+- Veri bütünlüğünün korunması
+- Tekrar oynatma saldırılarının önlenmesi
+- Yetkisiz erişimin engellenmesi
+
+Bu nedenle güncel erişim sistemleri güçlü kriptografik algoritmalar, oturum anahtarları ve karşılıklı doğrulama mekanizmalarını destekleyen kart teknolojilerini tercih etmektedir.
+
+---
