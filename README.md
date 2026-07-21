@@ -1,7 +1,5 @@
 <img width="1154" height="664" alt="access-control-system-app-story" src="https://github.com/user-attachments/assets/e0a8c40d-4615-400a-9ab5-2c4b4e124be8" />
 
-## RFID Güvenliği ve Modern Fiziksel Erişim Sistemlerine Bir Pentester Bakışı
-
 ## Giriş
 
 Kurumlar genelde güvenlik bütçesini ekrana, sunucuya, buluta yatırıyor; ama insanların her sabah elini bile sürmeden geçtiği o küçük kart okuyucu kutusuna neredeyse hiç bakmıyor. Oysa çok sağlam kurulmuş bir SOC/EDR/MFA altyapısının arkasında yıllardır değişmemiş, eski nesil bir kart okuyucu sistemi bulmak hiç de nadir değil.
